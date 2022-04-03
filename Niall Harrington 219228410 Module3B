@@ -1,0 +1,73 @@
+// SPDX-License-Identifier: MIT 
+
+pragma solidity ^0.6.10;
+
+// @author: Niall Harrington
+// @title: Module 3B
+// @notice: A contract that allows the owner to mint new tokens, as well as allows users to transfer tokens to another address.
+
+// @dev: Below is a interface. It is similar to a contract, but the functions inside it cannot be implemented.
+interface IToken { 
+    function transfer(address _recipient, uint _amount) external returns(bool);
+    function totalSupply() external returns (uint);
+    function balanceOf(address _owner) external returns (uint);
+}
+
+// @dev: Below is the Ownable contract from OpenZeppelin. This is the base contract.
+contract Ownable {
+
+    address owner = msg.sender;
+// @dev: This modifier only allows the owner to call the function it is featured in.
+    modifier onlyOwner {
+      require(msg.sender == owner, "Function can only be called by owner.");
+      _;
+   }
+   
+}
+
+// @dev: Here we have the main contract. It inherit's both the interface and the abstract contract.
+contract StandardToken is Ownable, IToken {
+
+    mapping(address => uint) public _balances;
+    uint _totalSupply;
+    string _name;
+    string _symbol;
+
+    // @dev: This constructor initializes the state variables.
+    constructor() public {
+        _totalSupply = 100;
+        _name = "York Token";
+        _symbol = "YRK";
+    }
+
+    // @dev: This function creates new tokens and deposits them in the provided address. 
+    // @dev: It uses the onlyOwner() modifier from the Ownable contract.
+    // @dev: Note that the total supply is also updated when new tokens are minted.
+    function mint(address _owner, uint _amount) public onlyOwner() {
+        _totalSupply += _amount;
+        _balances[_owner] += _amount;
+    }
+
+    // @dev: This is the transfer function to send tokens to another address from the msg.sender.
+    // @dev: The requirements of the assignment said that it should return a bool, but I don't know the purpose of this.
+    // @dev: Is the bool to confirm if the transaction went through or not?
+    function transfer(address _recipient, uint _amount) external override(IToken) returns(bool) {
+        _balances[_recipient] += _amount;
+        _balances[msg.sender] -= _amount;
+    }
+
+    // @dev: A function to return the _totalSupply. This can be found in the terminal under "decoded output" after the function has been called.
+    // @dev: What I dont understand though is that the totalSupply function call button is orange and not blue?
+    // @dev: Since the function is just returning the value, should that not be a simple read call? (Which doesn't cost gas.)
+    // @dev: Also, how come mappings show you the value of the mapping underneath the button when you click it? Is there a way to display that value under a function call button?
+    // @dev: because I think that would be handier than having to go into the terminal to find "decoded output" each time.
+    function totalSupply() external override returns (uint) {
+        return uint(_totalSupply);
+        }
+
+    // @dev: This function returns the uint value of the address provided.
+    // @dev: I used the override keyword because the function was previously declared in the interface.
+    function balanceOf(address _owner) external override returns (uint) {
+        return _balances[_owner];
+    }
+}
